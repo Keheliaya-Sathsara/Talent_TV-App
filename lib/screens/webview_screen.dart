@@ -6,10 +6,12 @@ import '../components/loading_indicator.dart';
 import '../components/circular_menu.dart';
 import '../components/live_button.dart';
 import '../components/custom_bottom_bar.dart';
-import 'home_screen.dart'; // Ensure HomeScreen is imported
+import 'home_screen.dart';
 
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen({super.key});
+  final String? url; // Added URL parameter
+
+  const WebViewScreen({super.key, this.url});
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -18,13 +20,13 @@ class WebViewScreen extends StatefulWidget {
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController _controller;
 
-  static const String _initialUrl = 'https://talenttv.lk/#/mobile/';
+  static const String _defaultInitialUrl = 'https://talenttv.lk/#/mobile/';
   static const String _livePageUrl = 'https://talenttv.lk/#/multi-player';
   static const String _livePageIdentifier = 'multi-player';
 
   bool _isLoading = true;
   bool _canGoBack = false;
-  String _currentUrl = _initialUrl;
+  late String _currentUrl;
   bool _showMenu = false;
 
   final List<Map<String, dynamic>> _menuItems = [
@@ -53,6 +55,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
+    // Use provided URL or default URL
+    _currentUrl = widget.url ?? _defaultInitialUrl;
     _initializeWebView();
   }
 
@@ -61,9 +65,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
       params = WebKitWebViewControllerCreationParams(
         allowsInlineMediaPlayback: true,
-        // FIX: Replaced const <WebViewPermission> with a proper Set<PlaybackMediaTypes>
-        // Use an empty set {} if no media types require user action,
-        // or {PlaybackMediaTypes.video, PlaybackMediaTypes.audio} if needed.
         mediaTypesRequiringUserAction: const {},
       );
     } else {
@@ -76,7 +77,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(_createNavigationDelegate())
-      ..loadRequest(Uri.parse(_initialUrl));
+      ..loadRequest(Uri.parse(_currentUrl)); // Load the initial URL
 
     if (controller.platform is AndroidWebViewController) {
       AndroidWebViewController.enableDebugging(true);
@@ -136,7 +137,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   void _injectCSS() {
-    // Inject CSS to hide unwanted elements like the default header/footer
     const String css = '''
       .header-mobile, footer, .footer-menu { display: none !important; }
       body { padding-bottom: 0 !important; }
@@ -166,7 +166,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _controller.loadRequest(Uri.parse(url));
   }
 
-  // Getter to check if the current page is the live page
   bool get _isLivePage => _currentUrl.contains(_livePageIdentifier);
 
   @override
@@ -224,7 +223,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
             });
           },
           onReloadPressed: () => _controller.reload(),
-          // Corrected Home navigation to go to HomeScreen
           onHomePressed: () {
             Navigator.pushAndRemoveUntil(
               context,
