@@ -1,0 +1,52 @@
+name: ttv
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.10.0
+  webview_flutter_wkwebview: ^3.23.0
+  url_launcher: ^6.3.2
+  connectivity_plus: ^6.0.5  # Crucial for checking network before launching WebView
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.3.10
+  flutter_launcher_icons: ^0.13.1
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "icons/Talent TV.png"
+  android_gravity: center
+  ios_content_mode: center
+
+  android_12:
+    image: "icons/Talent TV Logo.png"
+    icon_background_color: "#FFFFFF"
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "icons/Talent TV Logo.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/ttv.png
+    - assets/images/ttv.png
+    - assets/images/Talent TV Logo.png
+    - assets/images/talent_tv.jpg
+    - assets/images/logo.png
