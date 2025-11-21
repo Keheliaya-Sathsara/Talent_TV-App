@@ -67,8 +67,23 @@ class HomeScreen extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-
-                const SizedBox(height: 50),
+                const Text(
+                  'Sri Lanka First Hybrid Media Broadcaster',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        color: Colors.red,
+                        offset: Offset(0.5, 1),
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
                 GradientButton(
                   label: 'Talent TV',
                   icon: Icons.public,
