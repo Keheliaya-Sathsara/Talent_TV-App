@@ -17,6 +17,7 @@ dependencies:
   webview_flutter_wkwebview: ^3.23.0
   url_launcher: ^6.3.2
   connectivity_plus: ^6.0.5  # Crucial for checking network before launching WebView
+  just_audio: ^0.9.34
 
 dev_dependencies:
   flutter_test:

@@ -1,10 +1,12 @@
 // home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+// import 'package:ttv/screens/talent_radio_screen.dart';
 import '../components/gradient_button.dart';
 import '../components/network_error_dialog.dart';
 import 'webview_screen.dart';
 import 'youtube_screen.dart';
+import 'talent_radio_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -106,16 +108,7 @@ class HomeScreen extends StatelessWidget {
                 GradientButton(
                   label: 'Talent Radio',
                   icon: Icons.radio,
-                  onPressed: () async {
-                    var connectivityResult = await Connectivity().checkConnectivity();
-                    if (connectivityResult == ConnectivityResult.none) {
-                      if (context.mounted) {
-                        NetworkErrorDialog.show(context);
-                      }
-                      return;
-                    }
-                    // TODO: Navigate to Talent Radio screen
-                  },
+                  onPressed: () => _handleNavigation(context, const TalentRadioScreen()),
                 ),
                 const SizedBox(height: 20),
                 // --- End: Added Talent Life Button ---
