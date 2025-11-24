@@ -1,3 +1,4 @@
+// main.dart (Reverted to clean state)
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 

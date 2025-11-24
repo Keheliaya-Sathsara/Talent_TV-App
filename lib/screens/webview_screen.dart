@@ -1,7 +1,9 @@
+// webview_screen.dart (Updated)
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import '../components/loading_indicator.dart';
 import '../components/circular_menu.dart';
 import '../components/live_button.dart';
@@ -9,7 +11,7 @@ import '../components/custom_bottom_bar.dart';
 import 'home_screen.dart';
 
 class WebViewScreen extends StatefulWidget {
-  final String? url; // Added URL parameter
+  final String? url;
 
   const WebViewScreen({super.key, this.url});
 
@@ -55,12 +57,23 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
-    // Use provided URL or default URL
     _currentUrl = widget.url ?? _defaultInitialUrl;
     _initializeWebView();
   }
 
   void _initializeWebView() {
+    // 🚀 CRITICAL FIX for 'WebViewPlatform.instance != null' assertion.
+    // This ensures the platform implementation is registered if it hasn't been already.
+    if (WebViewPlatform.instance == null) {
+      if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+        // Use WKWebView for iOS/macOS
+        WebViewPlatform.instance = WebKitWebViewPlatform();
+      } else {
+        // Use AndroidWebViewPlatform for Android
+        WebViewPlatform.instance = AndroidWebViewPlatform();
+      }
+    }
+
     late final PlatformWebViewControllerCreationParams params;
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
       params = WebKitWebViewControllerCreationParams(
@@ -71,17 +84,19 @@ class _WebViewScreenState extends State<WebViewScreen> {
       params = const PlatformWebViewControllerCreationParams();
     }
 
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
+    final WebViewController controller =
+    WebViewController.fromPlatformCreationParams(params);
 
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(_createNavigationDelegate())
-      ..loadRequest(Uri.parse(_currentUrl)); // Load the initial URL
+      ..loadRequest(Uri.parse(_currentUrl));
 
     if (controller.platform is AndroidWebViewController) {
       AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController).setMediaPlaybackRequiresUserGesture(false);
+      (controller.platform as AndroidWebViewController)
+          .setMediaPlaybackRequiresUserGesture(false);
     }
 
     _controller = controller;
@@ -141,7 +156,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
       .header-mobile, footer, .footer-menu { display: none !important; }
       body { padding-bottom: 0 !important; }
     ''';
-    _controller.runJavaScript('var style = document.createElement("style"); style.innerHTML = "$css"; document.head.appendChild(style);');
+    _controller.runJavaScript(
+        'var style = document.createElement("style"); style.innerHTML = "$css"; document.head.appendChild(style);');
   }
 
   void _updateBackButton() async {
@@ -170,6 +186,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final viewPadding = MediaQuery.of(context).viewPadding;
+    final isTablet = screenWidth >= 600;
+
+    // Responsive positioning for LIVE button
+    final liveButtonBottom = isTablet ? 120.0 : 100.0;
+    final liveButtonRight = isTablet ? 24.0 : 16.0;
+
     return PopScope(
       canPop: !_canGoBack,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
@@ -183,7 +207,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
         backgroundColor: Colors.white,
         body: Stack(
           children: [
-            WebViewWidget(controller: _controller),
+            // WebView with proper padding for system UI
+            Positioned.fill(
+              top: viewPadding.top,
+              child: WebViewWidget(controller: _controller),
+            ),
             if (_isLoading) const LoadingIndicator(),
             if (_showMenu)
               CircularMenu(
@@ -197,8 +225,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
               ),
             if (!_isLivePage && !_showMenu)
               Positioned(
-                bottom: 100.0,
-                right: 16.0,
+                bottom: liveButtonBottom + viewPadding.bottom,
+                right: liveButtonRight,
                 child: LiveButton(
                   onTap: () {
                     _controller.loadRequest(Uri.parse(_livePageUrl));
@@ -224,6 +252,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
           },
           onReloadPressed: () => _controller.reload(),
           onHomePressed: () {
+            // Note: This navigates back to the HomeScreen and removes all previous routes.
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),

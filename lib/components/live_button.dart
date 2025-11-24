@@ -1,3 +1,4 @@
+// live_button.dart
 import 'package:flutter/material.dart';
 
 class LiveButton extends StatefulWidget {
@@ -43,6 +44,15 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 600;
+
+    // Responsive sizing
+    final buttonSize = isTablet ? 85.0 : 70.0;
+    final iconSize = isTablet ? 30.0 : 24.0;
+    final fontSize = isTablet ? 14.0 : 12.0;
+    final letterSpacing = isTablet ? 2.0 : 1.5;
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
@@ -51,8 +61,8 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
           children: [
             // Outer ripple layer 1
             Container(
-              width: 70 * _pulseAnimation.value,
-              height: 70 * _pulseAnimation.value,
+              width: buttonSize * _pulseAnimation.value,
+              height: buttonSize * _pulseAnimation.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.red.withOpacity(
@@ -62,8 +72,8 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
             ),
             // Outer ripple layer 2
             Container(
-              width: 70 * ((_pulseAnimation.value - 0.3).clamp(1.0, 1.8)),
-              height: 70 * ((_pulseAnimation.value - 0.3).clamp(1.0, 1.8)),
+              width: buttonSize * ((_pulseAnimation.value - 0.3).clamp(1.0, 1.8)),
+              height: buttonSize * ((_pulseAnimation.value - 0.3).clamp(1.0, 1.8)),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.red.withOpacity(
@@ -73,8 +83,8 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
             ),
             // Main button
             Container(
-              width: 70,
-              height: 70,
+              width: buttonSize,
+              height: buttonSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -86,8 +96,8 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
                 boxShadow: [
                   BoxShadow(
                     color: Colors.red.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 15,
+                    spreadRadius: isTablet ? 6 : 5,
+                    blurRadius: isTablet ? 18 : 15,
                     offset: const Offset(0, 3),
                   ),
                 ],
@@ -97,23 +107,23 @@ class _LiveButtonState extends State<LiveButton> with SingleTickerProviderStateM
                 child: InkWell(
                   onTap: widget.onTap,
                   customBorder: const CircleBorder(),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.play_circle_filled,
                           color: Colors.white,
-                          size: 24,
+                          size: iconSize,
                         ),
-                        SizedBox(height: 2),
+                        SizedBox(height: isTablet ? 3 : 2),
                         Text(
                           'LIVE',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: fontSize,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
+                            letterSpacing: letterSpacing,
                           ),
                         ),
                       ],

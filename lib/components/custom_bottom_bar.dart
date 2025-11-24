@@ -1,5 +1,6 @@
+// custom_bottom_bar.dart
 import 'package:flutter/material.dart';
-import 'dart:ui'; // Required for ImageFilter
+import 'dart:ui';
 
 class CustomBottomBar extends StatelessWidget {
   final bool canGoBack;
@@ -23,35 +24,51 @@ class CustomBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double barHeight = 70.0;
-    const double notchSize = 70.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final viewPadding = MediaQuery.of(context).viewPadding;
+    final isTablet = screenWidth >= 600;
+
+    // Responsive sizing
+    final barHeight = isTablet ? 80.0 : 70.0;
+    final notchSize = isTablet ? 80.0 : 70.0;
+    final iconSize = isTablet ? 28.0 : 24.0;
+    final fontSize = isTablet ? 11.0 : 10.0;
+    final centerIconSize = isTablet ? 36.0 : 30.0;
+
+    // Account for device navigation bar
+    final bottomPadding = viewPadding.bottom > 0
+        ? viewPadding.bottom.clamp(0, 20).toDouble() // FIXED: Added .toDouble()
+        : 0.0;
 
     return Material(
-      color: Colors.transparent, // Ensure the Material widget itself is transparent
+      color: Colors.transparent,
       elevation: 0,
-      child: ClipRRect( // ClipRRect is important for the blur effect
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        child: BackdropFilter( // This widget applies the blur effect (Liquid Glass effect)
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Adjust sigma for blur intensity
+      child: ClipRRect(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(isTablet ? 35 : 30),
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            height: barHeight + 30, // Keep total height
-            color: Colors.white.withOpacity(0.1), // Base transparent color for the glass effect
+            height: barHeight + 30 + bottomPadding,
+            padding: EdgeInsets.only(bottom: bottomPadding),
+            color: Colors.white.withOpacity(0.1),
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.bottomCenter,
               children: [
-                // The custom painted background bar (now draws the glossy effect)
+                // Custom painted background
                 CustomPaint(
-                  size: Size(MediaQuery.of(context).size.width, barHeight),
+                  size: Size(screenWidth, barHeight),
                   painter: _NotchPainter(
-                    color: Colors.white.withOpacity(0.15), // Slightly more opaque for the inner part
-                    borderColor: Colors.white.withOpacity(0.3), // Light border for definition
+                    color: Colors.white.withOpacity(0.15),
+                    borderColor: Colors.white.withOpacity(0.3),
                     notchSize: notchSize,
-                    shadowColor: Colors.black.withOpacity(0.1), // Softer shadow
+                    shadowColor: Colors.black.withOpacity(0.1),
                   ),
                 ),
 
-                // Navigation buttons positioned horizontally
+                // Navigation buttons
                 SizedBox(
                   height: barHeight,
                   child: Row(
@@ -62,34 +79,44 @@ class CustomBottomBar extends StatelessWidget {
                         label: 'Back',
                         onTap: onBackPressed,
                         enabled: canGoBack,
+                        iconSize: iconSize,
+                        fontSize: fontSize,
                       ),
                       _buildNavItem(
                         icon: Icons.arrow_forward_ios,
                         label: 'Forward',
                         onTap: onForwardPressed,
+                        iconSize: iconSize,
+                        fontSize: fontSize,
                       ),
-                      const SizedBox(width: notchSize * 1.2),
+                      SizedBox(width: notchSize * 1.2),
                       _buildNavItem(
                         icon: Icons.refresh,
                         label: 'Reload',
                         onTap: onReloadPressed,
+                        iconSize: iconSize,
+                        fontSize: fontSize,
                       ),
                       _buildNavItem(
                         icon: Icons.home,
                         label: 'Home',
                         onTap: onHomePressed,
+                        iconSize: iconSize,
+                        fontSize: fontSize,
                       ),
                     ],
                   ),
                 ),
 
-                // The prominent circular center Menu button
+                // Center Menu button
                 Positioned(
                   top: 0,
                   child: _buildCenterButton(
                     icon: showMenu ? Icons.close : Icons.menu,
                     onTap: onMenuPressed,
                     size: notchSize,
+                    iconSize: centerIconSize,
+                    showMenu: showMenu,
                   ),
                 ),
               ],
@@ -100,11 +127,12 @@ class CustomBottomBar extends StatelessWidget {
     );
   }
 
-  // Helper method for regular navigation items
   Widget _buildNavItem({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required double iconSize,
+    required double fontSize,
     bool enabled = true,
   }) {
     final Color itemColor = enabled ? Colors.red : Colors.grey.shade400;
@@ -114,20 +142,22 @@ class CustomBottomBar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: enabled ? onTap : null,
-          customBorder: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+          customBorder: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(15)),
+          ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: itemColor, size: 24),
+                Icon(icon, color: itemColor, size: iconSize),
                 const SizedBox(height: 2),
                 Text(
                   label,
                   style: TextStyle(
                     color: itemColor,
-                    fontSize: 10,
+                    fontSize: fontSize,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -139,11 +169,12 @@ class CustomBottomBar extends StatelessWidget {
     );
   }
 
-  // Helper method for the elevated center Menu button
   Widget _buildCenterButton({
     required IconData icon,
     required VoidCallback onTap,
     required double size,
+    required double iconSize,
+    required bool showMenu,
   }) {
     return Container(
       width: size,
@@ -176,7 +207,7 @@ class CustomBottomBar extends StatelessWidget {
               child: Icon(
                 icon,
                 color: Colors.white,
-                size: 30,
+                size: iconSize,
               ),
             ),
           ),
@@ -186,7 +217,6 @@ class CustomBottomBar extends StatelessWidget {
   }
 }
 
-// CustomPainter to draw the floating, notched shape with a smooth wave curve
 class _NotchPainter extends CustomPainter {
   final Color color;
   final Color borderColor;
@@ -204,58 +234,41 @@ class _NotchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double center = size.width / 2;
     final double radius = notchSize / 2;
-    // Reduced curve depth for a gentler wave effect (Smooth Wave Shape)
     const double curveDepth = 8.0;
     const double borderWidth = 1.0;
 
     final path = Path();
 
-    // 1. Start at top left
     path.moveTo(0, 0);
-
-    // 2. Line to start of the wave (shorter straight section)
     path.lineTo(center - radius - 15, 0);
-
-    // 3. Gentle curve down (Start of the wave)
     path.quadraticBezierTo(
       center - radius + 5,
       0,
       center - radius + 10,
       curveDepth,
     );
-
-    // 4. Smooth segment across the button's center
     path.lineTo(center + radius - 10, curveDepth);
-
-    // 5. Gentle curve up (End of the wave)
     path.quadraticBezierTo(
       center + radius - 5,
       0,
       center + radius + 15,
       0,
     );
-
-    // 6. Line to top right
     path.lineTo(size.width, 0);
-
-    // 7. Line to bottom right (and close path below the fold)
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();
 
-    // Draw Shadow
     final paintShadow = Paint()
       ..color = shadowColor
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
     canvas.drawPath(path, paintShadow);
 
-    // Draw the main fill color
     final paintFill = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, paintFill);
 
-    // Draw the border
     final paintBorder = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
