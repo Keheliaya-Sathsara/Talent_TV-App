@@ -16,15 +16,47 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 600;
+
+    // Responsive sizing
+    final buttonWidth = isTablet
+        ? double.infinity // Full width in tablet grid layout
+        : (screenWidth * 0.85).clamp(200.0, 400.0); // 85% width on mobile, clamped
+
+    final fontSize = isTablet
+        ? 20.0
+        : (screenWidth * 0.045).clamp(16.0, 20.0);
+
+    final iconSize = isTablet
+        ? 26.0
+        : (screenWidth * 0.055).clamp(22.0, 26.0);
+
+    final horizontalPadding = isTablet
+        ? 50.0
+        : (screenWidth * 0.08).clamp(30.0, 50.0);
+
+    final verticalPadding = isTablet
+        ? 18.0
+        : (screenWidth * 0.04).clamp(14.0, 18.0);
+
+    final borderRadius = isTablet ? 35.0 : 30.0;
+    final shadowBlur = isTablet ? 15.0 : 12.0;
+    final shadowSpread = isTablet ? 3.0 : 2.0;
+
     return Container(
-      width: 200,
+      width: buttonWidth,
+      constraints: BoxConstraints(
+        minHeight: isTablet ? 65 : 55,
+        maxWidth: isTablet ? double.infinity : 400,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.6),
-            spreadRadius: 2,
-            blurRadius: 12,
+            spreadRadius: shadowSpread,
+            blurRadius: shadowBlur,
             offset: const Offset(0, 6),
           ),
         ],
@@ -36,17 +68,29 @@ class GradientButton extends StatelessWidget {
       ),
       child: ElevatedButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(
+          icon,
+          color: Colors.white,
+          size: iconSize,
+        ),
         label: Text(
           label,
-          style: const TextStyle(fontSize: 18, color: Colors.white),
+          style: TextStyle(
+            fontSize: fontSize,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
           elevation: 0,
         ),
