@@ -5,6 +5,7 @@ import '../components/gradient_button.dart';
 import '../components/network_error_dialog.dart';
 import 'webview_screen.dart';
 import 'youtube_screen.dart';
+import 'life_screen.dart';
 import 'talent_radio_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -148,7 +149,7 @@ class HomeScreen extends StatelessWidget {
                                   onPressed: () => _handleNavigation(
                                     context,
                                     const WebViewScreen(
-                                      url: 'https://talenttv.lk/#/multi-player',
+                                      url: 'https://talenttv.lk/#/life',
                                     ),
                                   ),
                                 ),
@@ -202,7 +203,7 @@ class HomeScreen extends StatelessWidget {
                             onPressed: () => _handleNavigation(
                               context,
                               const WebViewScreen(
-                                url: 'https://talenttv.lk/#/multi-player',
+                                url: 'https://talenttv.lk/#/life',
                               ),
                             ),
                           ),
