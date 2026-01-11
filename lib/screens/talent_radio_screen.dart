@@ -17,6 +17,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
   double _volume = 1.0;
   bool _isMuted = false;
   double _savedVolume = 1.0;
+  Future<void>? _playbackFuture;
+  bool _isLoadingTimedOut = false;
 
   @override
   void initState() {
@@ -38,9 +40,26 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
 
   Future<void> _play() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _isLoadingTimedOut = false;
+        });
+      }
+
+      // Create a timeout that triggers after 15 seconds
+      _playbackFuture = Future.wait([
+        _audioPlayer
+            .setUrl('https://radio.talenttv.lk/listen/talent_radio/radio.mp3'),
+        Future.delayed(const Duration(seconds: 15)).then((_) {
+          if (_isLoading && mounted) {
+            setState(() {
+              _isLoadingTimedOut = true;
+            });
+          }
+        }),
+      ]);
+
       await _audioPlayer
           .setUrl('https://radio.talenttv.lk/listen/talent_radio/radio.mp3');
       await _audioPlayer.play();
@@ -61,6 +80,12 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
   }
 
   Future<void> _stop() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _isLoadingTimedOut = false;
+      });
+    }
     await _audioPlayer.stop();
   }
 
@@ -110,6 +135,7 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
 
   @override
   void dispose() {
+    _playbackFuture = null;
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -157,8 +183,7 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
           ),
         ),
         child: SingleChildScrollView(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: ConstrainedBox(
             constraints: BoxConstraints(
                 minHeight: MediaQuery.of(context).size.height -
@@ -241,7 +266,10 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: _isPlaying
-                              ? [const Color(0xFF00D084), const Color(0xFF00B870)]
+                              ? [
+                                  const Color(0xFF00D084),
+                                  const Color(0xFF00B870)
+                                ]
                               : [Colors.grey.shade400, Colors.grey.shade300],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -249,7 +277,9 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: (_isPlaying ? const Color(0xFF00D084) : Colors.grey)
+                            color: (_isPlaying
+                                    ? const Color(0xFF00D084)
+                                    : Colors.grey)
                                 .withOpacity(0.3),
                             blurRadius: 12,
                             spreadRadius: 2,
@@ -273,8 +303,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                             _isLoading
                                 ? 'Loading...'
                                 : _isPlaying
-                                ? '● LIVE ON AIR'
-                                : '○ OFFLINE',
+                                    ? '● LIVE ON AIR'
+                                    : '○ OFFLINE',
                             style: TextStyle(
                               fontSize: isTablet ? 14 : 12,
                               fontWeight: FontWeight.w700,
@@ -307,8 +337,12 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
 
                         const Spacer(flex: 2), // Flexible spacing
 
-                        _buildModernControlButton(Icons.stop_circle,
-                            const Color(0xFFFF4757), _stop, controlButtonSize, controlIconSize),
+                        _buildModernControlButton(
+                            Icons.stop_circle,
+                            const Color(0xFFFF4757),
+                            _stop,
+                            controlButtonSize,
+                            controlIconSize),
 
                         const Spacer(), // Smaller spacing around play button
 
@@ -318,14 +352,22 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: _isPlaying
-                                  ? [const Color(0xFFFFB13D), const Color(0xFFFFA502)]
-                                  : [const Color(0xFF00D084), const Color(0xFF00B870)],
+                                  ? [
+                                      const Color(0xFFFFB13D),
+                                      const Color(0xFFFFA502)
+                                    ]
+                                  : [
+                                      const Color(0xFF00D084),
+                                      const Color(0xFF00B870)
+                                    ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: (_isPlaying ? const Color(0xFFFFB13D) : const Color(0xFF00D084))
+                                color: (_isPlaying
+                                        ? const Color(0xFFFFB13D)
+                                        : const Color(0xFF00D084))
                                     .withOpacity(0.5),
                                 blurRadius: 25,
                                 spreadRadius: isTablet ? 8 : 6,
@@ -339,14 +381,28 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: _isLoading ? null : (_isPlaying ? _pause : _play),
-                                borderRadius: BorderRadius.circular(mainButtonSize / 2),
+                                onTap: _isPlaying ? _pause : _play,
+                                borderRadius:
+                                    BorderRadius.circular(mainButtonSize / 2),
                                 child: Center(
-                                  child: Icon(
-                                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                                    size: mainIconSize,
-                                    color: Colors.white,
-                                  ),
+                                  child: _isLoading
+                                      ? SizedBox(
+                                          width: mainIconSize,
+                                          height: mainIconSize,
+                                          child: CircularProgressIndicator(
+                                            valueColor: AlwaysStoppedAnimation<
+                                                    Color>(
+                                                Colors.white.withOpacity(0.9)),
+                                            strokeWidth: 3,
+                                          ),
+                                        )
+                                      : Icon(
+                                          _isPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
+                                          size: mainIconSize,
+                                          color: Colors.white,
+                                        ),
                                 ),
                               ),
                             ),
@@ -357,7 +413,9 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
 
                         _buildModernControlButton(
                           _isMuted ? Icons.volume_off : Icons.volume_up,
-                          _isMuted ? Colors.grey.shade600 : const Color(0xFF5B9FFF),
+                          _isMuted
+                              ? Colors.grey.shade600
+                              : const Color(0xFF5B9FFF),
                           _toggleMute,
                           controlButtonSize,
                           controlIconSize,
@@ -376,7 +434,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                     const SizedBox(height: 24),
                     // Modern Volume Control (Responsive Margin for Tablets)
                     Container(
-                      margin: EdgeInsets.symmetric(horizontal: isTablet ? 40.0 : 0.0),
+                      margin: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 40.0 : 0.0),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.8),
@@ -409,7 +468,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                                     activeTrackColor: const Color(0xFFFF4757),
                                     inactiveTrackColor: Colors.grey.shade300,
                                     thumbShape: RoundSliderThumbShape(
-                                      enabledThumbRadius: isTablet ? 12.0 : 10.0,
+                                      enabledThumbRadius:
+                                          isTablet ? 12.0 : 10.0,
                                       elevation: 4.0,
                                     ),
                                     thumbColor: const Color(0xFFFF4757),
@@ -457,9 +517,14 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _buildMinimalButton(
-                                  Icons.remove, 'VOL−', _volumeDown, volumeButtonSize, volumeIconSize),
+                                  Icons.remove,
+                                  'VOL−',
+                                  _volumeDown,
+                                  volumeButtonSize,
+                                  volumeIconSize),
                               SizedBox(width: isTablet ? 16 : 12),
-                              _buildMinimalButton(Icons.add, 'VOL+', _volumeUp, volumeButtonSize, volumeIconSize),
+                              _buildMinimalButton(Icons.add, 'VOL+', _volumeUp,
+                                  volumeButtonSize, volumeIconSize),
                             ],
                           ),
                         ],
@@ -471,7 +536,7 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
                 // Bottom Info (Responsive Padding and Font Size)
                 Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.03),
                     borderRadius: BorderRadius.circular(12),
@@ -501,8 +566,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
 
   // --- Helper Methods Updated to Accept Dynamic Size ---
 
-  Widget _buildModernControlButton(
-      IconData icon, Color color, VoidCallback onPressed, double size, double iconSize) {
+  Widget _buildModernControlButton(IconData icon, Color color,
+      VoidCallback onPressed, double size, double iconSize) {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -537,8 +602,8 @@ class _TalentRadioScreenState extends State<TalentRadioScreen> {
     );
   }
 
-  Widget _buildMinimalButton(
-      IconData icon, String label, VoidCallback onPressed, double size, double iconSize) {
+  Widget _buildMinimalButton(IconData icon, String label,
+      VoidCallback onPressed, double size, double iconSize) {
     return Column(
       children: [
         Container(
