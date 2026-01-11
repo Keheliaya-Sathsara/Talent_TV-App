@@ -22,23 +22,18 @@ class GradientButton extends StatelessWidget {
     // Responsive sizing
     final buttonWidth = isTablet
         ? double.infinity // Full width in tablet grid layout
-        : (screenWidth * 0.85).clamp(200.0, 400.0); // 85% width on mobile, clamped
+        : (screenWidth * 0.75)
+            .clamp(180.0, 350.0); // 75% width on mobile, clamped
 
-    final fontSize = isTablet
-        ? 20.0
-        : (screenWidth * 0.045).clamp(16.0, 20.0);
+    final fontSize = isTablet ? 18.0 : (screenWidth * 0.04).clamp(14.0, 18.0);
 
-    final iconSize = isTablet
-        ? 26.0
-        : (screenWidth * 0.055).clamp(22.0, 26.0);
+    final iconSize = isTablet ? 24.0 : (screenWidth * 0.05).clamp(20.0, 24.0);
 
-    final horizontalPadding = isTablet
-        ? 50.0
-        : (screenWidth * 0.08).clamp(30.0, 50.0);
+    final horizontalPadding =
+        isTablet ? 40.0 : (screenWidth * 0.06).clamp(24.0, 40.0);
 
-    final verticalPadding = isTablet
-        ? 18.0
-        : (screenWidth * 0.04).clamp(14.0, 18.0);
+    final verticalPadding =
+        isTablet ? 14.0 : (screenWidth * 0.03).clamp(10.0, 14.0);
 
     final borderRadius = isTablet ? 35.0 : 30.0;
     final shadowBlur = isTablet ? 15.0 : 12.0;
@@ -47,7 +42,7 @@ class GradientButton extends StatelessWidget {
     return Container(
       width: buttonWidth,
       constraints: BoxConstraints(
-        minHeight: isTablet ? 65 : 55,
+        minHeight: isTablet ? 58 : 48,
         maxWidth: isTablet ? double.infinity : 400,
       ),
       decoration: BoxDecoration(
